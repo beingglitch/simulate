@@ -1,0 +1,169 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #080f1a;
+  color: #dce8f5;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+}
+
+/* ── Fonts ───────────────────────────────────────────────────────────────── */
+.mono { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(77,140,220,0.25); border-radius: 2px; }
+
+/* ── Panel base ──────────────────────────────────────────────────────────── */
+.panel {
+  background: #0c1826;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Leaflet overrides ───────────────────────────────────────────────────── */
+.leaflet-container {
+  background: #080f1a !important;
+  font-family: inherit;
+}
+.leaflet-control-zoom { display: none; }
+.leaflet-control-attribution {
+  background: rgba(8,15,26,0.75) !important;
+  color: rgba(150,170,200,0.4) !important;
+  font-size: 9px !important;
+  border: none !important;
+}
+.leaflet-control-attribution a { color: rgba(100,150,200,0.5) !important; }
+
+/* ── Threat markers ──────────────────────────────────────────────────────── */
+.threat-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.threat-icon {
+  width: 22px; height: 22px;
+  border: 1.5px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  transition: transform 0.15s;
+  transform-origin: center center;
+}
+.threat-icon.selected {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 2px currentColor;
+}
+.threat-label {
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(220,235,255,0.8);
+  white-space: nowrap;
+  background: rgba(8,15,26,0.75);
+  padding: 0 3px;
+  letter-spacing: 0.05em;
+}
+
+/* Shapes per type */
+.threat-icon.fpv-drone  { background: rgba(220,50,50,0.15);  color: #f06060; transform: rotate(45deg); }
+.threat-icon.rf-ied     { background: rgba(230,140,0,0.15);  color: #f5a020; border-radius: 50%; }
+.threat-icon.enemy-rcws { background: rgba(200,40,120,0.15); color: #e050a0; clip-path: polygon(50% 0%,100% 100%,0% 100%); }
+
+/* Disrupted / destroyed */
+.threat-icon.disrupted  { opacity: 0.55; color: #3dd68c !important; background: rgba(61,214,140,0.12) !important; }
+.threat-icon.destroyed  { opacity: 0.3;  color: #606878 !important; background: transparent !important; }
+
+/* Vehicle marker */
+.vehicle-marker {
+  width: 28px; height: 28px;
+  border: 2px solid #4da6ff;
+  border-radius: 3px;
+  background: rgba(13,30,55,0.9);
+  display: flex; align-items: center; justify-content: center;
+  color: #4da6ff;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  box-shadow: 0 0 0 3px rgba(77,166,255,0.15);
+}
+
+/* ── Status colors ───────────────────────────────────────────────────────── */
+.status-approaching { color: #f05252; }
+.status-engaged     { color: #f59e0b; }
+.status-disrupted   { color: #3dd68c; }
+.status-destroyed   { color: #506070; }
+.status-escaped     { color: #506070; }
+
+/* ── Pulse animation ─────────────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.pulse-ring {
+  position: absolute; inset: -4px;
+  border: 1px solid currentColor;
+  border-radius: inherit;
+  animation: pulse-ring 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+/* ── Blink ───────────────────────────────────────────────────────────────── */
+@keyframes blink-slow { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.blink { animation: blink-slow 1.2s ease-in-out infinite; }
+
+/* ── Top bar separator ───────────────────────────────────────────────────── */
+.topbar-sep {
+  width: 1px; height: 16px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Bottom control bar ──────────────────────────────────────────────────── */
+.control-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(8,15,26,0.96);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 8px 16px;
+  display: flex; align-items: center; gap: 20px;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  padding: 5px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  border: 1px solid;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  background: transparent;
+  user-select: none;
+}
+.btn-amber {
+  border-color: rgba(245,158,11,0.6);
+  color: #f5bc4b;
+}
+.btn-amber:hover { background: rgba(245,158,11,0.12); }
+
+.btn-red {
+  border-color: rgba(240,82,82,0.7);
+  color: #f07070;
+}
+.btn-red:hover { background: rgba(240,82,82,0.12); }
+
+/* ── Range slider ────────────────────────────────────────────────────────── */
+input[type=range] {
+  accent-color: #4da6ff;
+  height: 2px;
+  cursor: pointer;
+}
