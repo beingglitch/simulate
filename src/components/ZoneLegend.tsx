@@ -12,10 +12,60 @@ const MODE_COLOR: Record<string, string> = {
   KINETIC:      '#f05252',
 }
 
-interface Props { state: SimState }
+interface Props {
+  state: SimState
+  /** When true, renders only zones + track types (no wrapper panel chrome) */
+  compact?: boolean
+}
 
-export default function ZoneLegend({ state }: Props) {
+export default function ZoneLegend({ state, compact }: Props) {
   const modeColor = MODE_COLOR[state.turret.mode] ?? '#4da6ff'
+
+  const zonesContent = (
+    <>
+      {/* Zone legend */}
+      <div style={{ marginBottom: 12 }}>
+        {ZONES.map(z => (
+          <div key={z.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%', flexShrink: 0, marginTop: 2,
+              background: z.color, opacity: 0.85,
+            }} />
+            <div>
+              <div className="mono" style={{ color: 'rgba(200,220,245,0.75)', fontSize: 10 }}>{z.label}</div>
+              <div className="mono" style={{ color: 'rgba(130,160,195,0.45)', fontSize: 9 }}>
+                {z.range} · {z.desc}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Threat key */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 10 }}>
+        <div className="mono" style={{ color: 'rgba(120,150,185,0.4)', fontSize: 9, letterSpacing: '0.1em', marginBottom: 6 }}>
+          TRACK TYPES
+        </div>
+        {[
+          { letter: 'F', label: 'FPV Drone',   color: '#f05252' },
+          { letter: 'I', label: 'RF-IED',       color: '#f59e0b' },
+          { letter: 'R', label: 'Enemy RCWS',   color: '#e050a0' },
+        ].map(t => (
+          <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <div className="mono" style={{
+              width: 16, height: 16, border: `1.5px solid ${t.color}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: t.color, fontSize: 9, fontWeight: 700,
+              background: `${t.color}12`,
+            }}>{t.letter}</div>
+            <span className="mono" style={{ color: 'rgba(170,200,230,0.55)', fontSize: 10 }}>{t.label}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )
+
+  if (compact) return <>{zonesContent}</>
 
   return (
     <div style={{
@@ -30,25 +80,9 @@ export default function ZoneLegend({ state }: Props) {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-        {/* Zone legend */}
-        <div style={{ marginBottom: 16 }}>
-          {ZONES.map(z => (
-            <div key={z.label} style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              <div style={{
-                width: 10, height: 10, borderRadius: '50%', flexShrink: 0, marginTop: 2,
-                background: z.color, opacity: 0.85,
-              }} />
-              <div>
-                <div className="mono" style={{ color: 'rgba(200,220,245,0.75)', fontSize: 10 }}>{z.label}</div>
-                <div className="mono" style={{ color: 'rgba(130,160,195,0.45)', fontSize: 9 }}>
-                  {z.range} · {z.desc}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {zonesContent}
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12, marginBottom: 16 }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12, marginTop: 12, marginBottom: 16 }}>
           <div className="mono" style={{ color: 'rgba(120,150,185,0.4)', fontSize: 9, letterSpacing: '0.1em', marginBottom: 8 }}>
             ACTIVE MODE
           </div>
@@ -66,28 +100,6 @@ export default function ZoneLegend({ state }: Props) {
                :                                        'Kinetic engagement'}
             </div>
           </div>
-        </div>
-
-        {/* Threat key */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12, marginBottom: 16 }}>
-          <div className="mono" style={{ color: 'rgba(120,150,185,0.4)', fontSize: 9, letterSpacing: '0.1em', marginBottom: 8 }}>
-            TRACK TYPES
-          </div>
-          {[
-            { letter: 'F', label: 'FPV Drone',   color: '#f05252', shape: 'rotated square' },
-            { letter: 'I', label: 'RF-IED',       color: '#f59e0b', shape: 'circle' },
-            { letter: 'R', label: 'Enemy RCWS',   color: '#e050a0', shape: 'triangle' },
-          ].map(t => (
-            <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <div className="mono" style={{
-                width: 16, height: 16, border: `1.5px solid ${t.color}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: t.color, fontSize: 9, fontWeight: 700,
-                background: `${t.color}12`,
-              }}>{t.letter}</div>
-              <span className="mono" style={{ color: 'rgba(170,200,230,0.55)', fontSize: 10 }}>{t.label}</span>
-            </div>
-          ))}
         </div>
 
         {/* System status */}

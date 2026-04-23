@@ -206,6 +206,90 @@ function EMPPulse({ fired }: { fired: boolean }) {
   return null
 }
 
+// ── Step-specific beam drawing functions ──────────────────────────────────
+
+function seededRandom(seed: number): () => number {
+  let s = seed | 0
+  return () => {
+    s = Math.imul(s ^ (s >>> 15), s | 1) ^ (s + Math.imul(s ^ (s >>> 7), s | 61))
+    return ((s ^ (s >>> 14)) >>> 0) / 0xffffffff
+  }
+}
+
+function drawFingerprint(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = 'rgba(77,166,255,0.22)'; ctx.lineWidth = 1
+  ctx.setLineDash([4, 5]); ctx.stroke(); ctx.setLineDash([])
+  const period = 900
+  ;[0, 0.33, 0.66].forEach(offset => {
+    const phase = ((now % period) / period + offset) % 1
+    const px = cx + (tx - cx) * phase, py = cy + (ty - cy) * phase
+    const alpha = Math.sin(phase * Math.PI) * 0.7
+    ctx.beginPath(); ctx.arc(px, py, 3 + phase * 10, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(77,166,255,${alpha.toFixed(2)})`; ctx.lineWidth = 1.5; ctx.stroke()
+  })
+}
+
+function drawSoftAttack(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = 'rgba(0,212,255,0.3)'; ctx.lineWidth = 1.2
+  ctx.setLineDash([3, 4]); ctx.stroke(); ctx.setLineDash([])
+  const rng = seededRandom(Math.floor(now / 80))
+  for (let i = 0; i < 22; i++) {
+    const r = rng() * 44, a = rng() * Math.PI * 2
+    ctx.beginPath(); ctx.arc(tx + Math.cos(a) * r, ty + Math.sin(a) * r, 0.8 + rng() * 2, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(0,212,255,${(rng() * 0.45 + 0.1).toFixed(2)})`; ctx.fill()
+  }
+}
+
+function drawFrontDoor(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = 'rgba(245,188,75,0.1)'; ctx.lineWidth = 7; ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = 'rgba(245,188,75,0.8)'; ctx.lineWidth = 1.5; ctx.stroke()
+  const pulse = 0.5 + 0.5 * Math.sin(now / 130)
+  ctx.beginPath(); ctx.arc(tx, ty, 3 + pulse * 3, 0, Math.PI * 2)
+  ctx.fillStyle = `rgba(245,188,75,${(0.55 + pulse * 0.35).toFixed(2)})`; ctx.fill()
+}
+
+function drawCumStress(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  const a = 0.35 + 0.25 * Math.abs(Math.sin(now / 280))
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = `rgba(245,158,11,${a.toFixed(2)})`; ctx.lineWidth = 2; ctx.stroke()
+  ;[0.2, 0.4, 0.6, 0.8].forEach((frac, i) => {
+    const hx = cx + (tx - cx) * frac, hy = cy + (ty - cy) * frac
+    const p = Math.sin(now / 200 + i * 1.2)
+    ctx.beginPath(); ctx.arc(hx, hy, 5 + p * 3, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(245,158,11,${(0.18 + 0.12 * p).toFixed(2)})`; ctx.lineWidth = 1; ctx.stroke()
+  })
+}
+
+function drawResonanceStrike(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  const bright = 0.6 + 0.4 * Math.abs(Math.sin(now / 90))
+  for (const [sw, sa] of [[9, 0.08], [3, 0.28]] as [number, number][]) {
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+    ctx.strokeStyle = `rgba(255,100,40,${sa})`; ctx.lineWidth = sw; ctx.stroke()
+  }
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = `rgba(255,200,60,${bright.toFixed(2)})`; ctx.lineWidth = 1.5; ctx.stroke()
+  ;[0, 0.38, 0.72].forEach(off => {
+    const phase = ((now % 580) / 580 + off) % 1
+    ctx.beginPath(); ctx.arc(tx, ty, phase * 32, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(255,140,50,${((1 - phase) * 0.65).toFixed(2)})`; ctx.lineWidth = 1.5; ctx.stroke()
+  })
+  ctx.beginPath(); ctx.arc(tx, ty, 3 + bright * 2.5, 0, Math.PI * 2)
+  ctx.fillStyle = `rgba(255,220,80,${bright.toFixed(2)})`; ctx.fill()
+}
+
+function drawAssess(ctx: CanvasRenderingContext2D, cx: number, cy: number, tx: number, ty: number, now: number) {
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty)
+  ctx.strokeStyle = 'rgba(61,214,140,0.18)'; ctx.lineWidth = 1
+  ctx.setLineDash([3, 5]); ctx.stroke(); ctx.setLineDash([])
+  const phase = 1 - ((now % 1100) / 1100)
+  ctx.beginPath(); ctx.arc(cx + (tx - cx) * phase, cy + (ty - cy) * phase, 2.5, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(61,214,140,0.75)'; ctx.fill()
+}
+
 // Pipeline beam canvas
 function PipelineBeam({ state }: { state: SimState }) {
   const map    = useMap()
@@ -239,23 +323,15 @@ function PipelineBeam({ state }: { state: SimState }) {
           const tLL = polarToLatLng(cLL, t.bearing, t.range)
           const cp  = map.latLngToContainerPoint(cLL)
           const tp  = map.latLngToContainerPoint(tLL)
-
-          const alpha = 0.35 + 0.3 * Math.abs(Math.sin(Date.now() / 200))
-          ctx.beginPath()
-          ctx.moveTo(cp.x, cp.y)
-          ctx.lineTo(tp.x, tp.y)
-          ctx.strokeStyle = `rgba(240,100,20,${alpha})`
-          ctx.lineWidth = 1.5
-          ctx.setLineDash([4, 3])
-          ctx.stroke()
-          ctx.setLineDash([])
-
-          // Progress dot
-          const prog = s.pipelineProgress / 100
-          ctx.beginPath()
-          ctx.arc(cp.x + (tp.x - cp.x) * prog, cp.y + (tp.y - cp.y) * prog, 3, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(255,180,50,${alpha + 0.2})`
-          ctx.fill()
+          const now = Date.now()
+          switch (s.pipelineStep) {
+            case 'FINGERPRINT':       drawFingerprint(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+            case 'SOFT_ATTACK':       drawSoftAttack(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+            case 'FRONT_DOOR':        drawFrontDoor(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+            case 'CUMULATIVE_STRESS': drawCumStress(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+            case 'RESONANCE_STRIKE':  drawResonanceStrike(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+            case 'ASSESS':            drawAssess(ctx, cp.x, cp.y, tp.x, tp.y, now); break
+          }
         }
       }
 

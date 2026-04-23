@@ -4,25 +4,11 @@ import { useSimStore } from './store/simStore'
 import TopBar from './components/TopBar'
 import MapView from './components/MapView'
 import ThreatPanel from './components/ThreatPanel'
-import ZoneLegend from './components/ZoneLegend'
+import OperatorConsole from './components/console/OperatorConsole'
+import PipelineOverlay from './components/pipeline/PipelineOverlay'
 import { Button } from './components/ui/button'
 import { Badge } from './components/ui/badge'
 import type { ThreatType } from './types'
-
-const PIPELINE_STEPS = [
-  'FINGERPRINT', 'SOFT ATTACK', 'FRONT DOOR',
-  'CUMULATIVE STRESS', 'RESONANCE STRIKE', 'ASSESS',
-] as const
-type Step = typeof PIPELINE_STEPS[number]
-
-const STEP_DESC: Record<Step, string> = {
-  'FINGERPRINT':        'Analysing RF signature',
-  'SOFT ATTACK':        'Injecting noise floor',
-  'FRONT DOOR':         'Exploiting RF receiver',
-  'CUMULATIVE STRESS':  'Building EM stress field',
-  'RESONANCE STRIKE':   'Firing directed EMP pulse',
-  'ASSESS':             'Evaluating target status',
-}
 
 const STATUS_BADGE_VARIANT: Record<string, 'hostile' | 'disrupted' | 'destroyed' | 'engaged' | 'escaped'> = {
   APPROACHING: 'hostile',
@@ -90,8 +76,7 @@ export default function App() {
 
   const selectedThreat = state.threats.find(t => t.id === state.selectedThreatId)
   const isEngageable   = selectedThreat?.status === 'APPROACHING'
-  const currentStep    = state.pipelineStep?.replace(/_/g, ' ') as Step | undefined
-  const stepIdx        = currentStep ? PIPELINE_STEPS.indexOf(currentStep) : -1
+  const currentStep    = state.pipelineStep?.replace(/_/g, ' ')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', background: '#080f1a', userSelect: 'none' }}>
@@ -108,40 +93,7 @@ export default function App() {
           <MapView state={state} onSelectThreat={id => selectThreat(id)} />
 
           {/* ── Pipeline overlay ─────────────────────────────── */}
-          {state.pipelineActive && (
-            <div style={{
-              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(8,15,26,0.96)', border: '1px solid rgba(245,158,11,0.3)',
-              padding: '10px 16px', minWidth: 340, zIndex: 1000, backdropFilter: 'blur(4px)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f5bc4b' }} className="blink" />
-                <span className="mono" style={{ color: '#f5bc4b', fontSize: 10, letterSpacing: '0.12em' }}>
-                  ATTACK PIPELINE
-                </span>
-                <span className="mono" style={{ color: 'rgba(140,170,210,0.4)', fontSize: 10, marginLeft: 'auto' }}>
-                  {state.selectedThreatId}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
-                {PIPELINE_STEPS.map((s, i) => (
-                  <div key={s} style={{
-                    flex: 1, height: 2,
-                    background: i < stepIdx ? '#3dd68c' : i === stepIdx ? '#f5bc4b' : 'rgba(255,255,255,0.07)',
-                    transition: 'background 0.3s',
-                  }} />
-                ))}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span className="mono" style={{ color: '#f5bc4b', fontSize: 11, fontWeight: 700 }}>
-                  {currentStep ?? PIPELINE_STEPS[0]}
-                </span>
-                <span className="mono" style={{ color: 'rgba(140,170,210,0.45)', fontSize: 10 }}>
-                  {currentStep ? STEP_DESC[currentStep] : ''}
-                </span>
-              </div>
-            </div>
-          )}
+          <PipelineOverlay state={state} />
 
           {/* ── Engage control panel — always visible, bottom-right ── */}
           <div style={{
@@ -288,8 +240,13 @@ export default function App() {
         </div>
 
         {/* Right panel */}
-        <div style={{ width: 200, flexShrink: 0, overflow: 'hidden' }}>
-          <ZoneLegend state={state} />
+        <div style={{ width: 300, flexShrink: 0, overflow: 'hidden' }}>
+          <OperatorConsole
+            state={state}
+            setTurretAzimuth={setTurretAzimuth}
+            setTurretElevation={setTurretElevation}
+            setWeaponMode={setWeaponMode}
+          />
         </div>
       </div>
     </div>

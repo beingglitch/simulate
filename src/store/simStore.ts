@@ -59,6 +59,7 @@ const INITIAL_STATE: SimState = {
   pipelineStep: null,
   pipelineProgress: 0,
   empFired: false,
+  empFireCount: 0,
   systemTime: 0,
 }
 
@@ -121,6 +122,7 @@ export function useSimStore() {
             pipelineStep: null,
             pipelineProgress: 100,
             empFired: true,
+            empFireCount: s.empFireCount + 1,
             engagementApproved: false,
           }
         })

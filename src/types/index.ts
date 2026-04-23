@@ -37,5 +37,6 @@ export interface SimState {
   pipelineStep: PipelineStep | null
   pipelineProgress: number  // 0–100
   empFired: boolean
-  systemTime: number  // ms since start
+  empFireCount: number      // increments each EMP discharge; drives E-field animation
+  systemTime: number        // ms since start
 }
