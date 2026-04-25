@@ -28,6 +28,15 @@ export interface TurretState {
   mode: WeaponMode
 }
 
+export interface KillEntry {
+  id: string
+  type: ThreatType
+  mode: WeaponMode
+  outcome: 'DESTROYED' | 'DISRUPTED'
+  range: number
+  time: number   // ms since start
+}
+
 export interface SimState {
   threats: Threat[]
   turret: TurretState
@@ -39,4 +48,5 @@ export interface SimState {
   empFired: boolean
   empFireCount: number      // increments each EMP discharge; drives E-field animation
   systemTime: number        // ms since start
+  killLog: KillEntry[]
 }

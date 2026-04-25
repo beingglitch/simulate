@@ -130,15 +130,15 @@ function RadarSweep({ azimuth }: { azimuth: number }) {
   return null
 }
 
-// EMP pulse canvas overlay
-function EMPPulse({ fired }: { fired: boolean }) {
+// EMP pulse canvas overlay — re-triggers on each new fire via fireCount
+function EMPPulse({ fireCount }: { fireCount: number }) {
   const map = useMap()
-  const firedRef  = useRef(fired)
-  const prevFired = useRef(false)
-  const pulseR    = useRef(0)
-  const activeRef = useRef(false)
-  const rafRef    = useRef<number>(0)
-  firedRef.current = fired
+  const fireCountRef  = useRef(fireCount)
+  const prevFireCount = useRef(fireCount)
+  const pulseR        = useRef(0)
+  const activeRef     = useRef(false)
+  const rafRef        = useRef<number>(0)
+  fireCountRef.current = fireCount
 
   useEffect(() => {
     const canvas = L.DomUtil.create('canvas') as HTMLCanvasElement
@@ -154,11 +154,11 @@ function EMPPulse({ fired }: { fired: boolean }) {
     map.on('resize move zoom', resize)
 
     const draw = () => {
-      if (firedRef.current && !prevFired.current) {
+      if (fireCountRef.current > prevFireCount.current) {
         pulseR.current = 0
         activeRef.current = true
       }
-      prevFired.current = firedRef.current
+      prevFireCount.current = fireCountRef.current
 
       const ctx = canvas.getContext('2d')
       if (!ctx) { rafRef.current = requestAnimationFrame(draw); return }
@@ -367,9 +367,12 @@ function ThreatMarkers({ state, onSelectThreat }: InnerProps) {
       const statusCls = t.status.toLowerCase()
       const letter    = THREAT_LETTER[t.type] ?? '?'
 
+      const innerLetter = typeClass === 'fpv-drone'
+        ? `<span class="counter-rotate">${letter}</span>`
+        : letter
       const iconHtml = `
         <div class="threat-marker">
-          <div class="threat-icon ${typeClass} ${selected ? 'selected' : ''} ${statusCls}">${letter}</div>
+          <div class="threat-icon ${typeClass} ${selected ? 'selected' : ''} ${statusCls}">${innerLetter}</div>
           <div class="threat-label">${t.id} · ${Math.round(t.range)}m</div>
         </div>`
 
@@ -474,7 +477,7 @@ export default function MapView({ state, onSelectThreat }: Props) {
 
       {/* Animated overlays */}
       <RadarSweep azimuth={state.turret.azimuth} />
-      <EMPPulse   fired={state.empFired} />
+      <EMPPulse   fireCount={state.empFireCount} />
       <PipelineBeam state={state} />
 
       {/* Markers */}

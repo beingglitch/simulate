@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { SimState } from '../types'
 
-interface Props { state: SimState }
+interface Props {
+  state: SimState
+  onReset: () => void
+}
 
-export default function TopBar({ state }: Props) {
+export default function TopBar({ state, onReset }: Props) {
   const [clock, setClock] = useState('')
   useEffect(() => {
     const tick = () => setClock(new Date().toISOString().replace('T', ' ').slice(0, 19) + 'Z')
@@ -12,7 +15,9 @@ export default function TopBar({ state }: Props) {
     return () => clearInterval(id)
   }, [])
 
-  const activeThreats = state.threats.filter(t => t.status === 'APPROACHING').length
+  const activeThreats  = state.threats.filter(t => t.status === 'APPROACHING').length
+  const neutralised    = state.killLog.length
+  const escaped        = state.threats.filter(t => t.status === 'ESCAPED').length
 
   return (
     <div
@@ -38,20 +43,22 @@ export default function TopBar({ state }: Props) {
         </div>
         <div className="topbar-sep" />
         <span className="mono" style={{ color: 'rgba(160,185,215,0.45)', fontSize: 10, letterSpacing: '0.08em' }}>
-          COUNTER-UAS / EW SIMULATOR
+          STORMBREAKER · COUNTER-UAS / EW SIMULATOR
         </span>
       </div>
 
       {/* Metrics */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Metric label="TRACKS" value={String(state.threats.length)} />
-        <Metric label="HOSTILE" value={String(activeThreats)} accent={activeThreats > 0 ? '#f05252' : '#3dd68c'} />
-        <Metric label="MODE" value={state.turret.mode.replace(/_/g, ' ')} accent="#4da6ff" />
-        <Metric label="AZ" value={`${state.turret.azimuth.toFixed(0)}°`} />
-        <Metric label="EL" value={`${state.turret.elevation.toFixed(0)}°`} />
+        <Metric label="TRACKS"     value={String(state.threats.length)} />
+        <Metric label="HOSTILE"    value={String(activeThreats)} accent={activeThreats > 0 ? '#f05252' : '#3dd68c'} />
+        <Metric label="NEUTRALISED" value={String(neutralised)} accent={neutralised > 0 ? '#3dd68c' : undefined} />
+        {escaped > 0 && <Metric label="ESCAPED" value={String(escaped)} accent="#f59e0b" />}
+        <Metric label="MODE"       value={state.turret.mode.replace(/_/g, ' ')} accent="#4da6ff" />
+        <Metric label="AZ"         value={`${state.turret.azimuth.toFixed(0)}°`} />
+        <Metric label="EL"         value={`${state.turret.elevation.toFixed(0)}°`} />
       </div>
 
-      {/* Clock + status */}
+      {/* Clock + status + reset */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span className="mono" style={{ color: 'rgba(160,190,225,0.4)', fontSize: 10 }}>UTC</span>
         <span className="mono" style={{ color: 'rgba(200,220,245,0.75)', fontSize: 11 }}>{clock}</span>
@@ -67,6 +74,30 @@ export default function TopBar({ state }: Props) {
         >
           {state.pipelineActive ? '● ENGAGING' : '● STANDBY'}
         </div>
+        <div className="topbar-sep" />
+        <button
+          onClick={onReset}
+          className="mono"
+          title="Reset scenario [R]"
+          style={{
+            padding: '2px 10px', fontSize: 9, letterSpacing: '0.1em',
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'transparent',
+            color: 'rgba(160,190,225,0.45)',
+            cursor: 'pointer',
+            transition: 'all 0.12s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,82,82,0.4)'
+            ;(e.currentTarget as HTMLElement).style.color = '#f07070'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'
+            ;(e.currentTarget as HTMLElement).style.color = 'rgba(160,190,225,0.45)'
+          }}
+        >
+          RESET [R]
+        </button>
       </div>
     </div>
   )

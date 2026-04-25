@@ -115,6 +115,44 @@ export default function ThreatPanel({ state, onSelect, onSpawn }: Props) {
           ))}
         </div>
       </div>
+
+      {/* Engagement log */}
+      {state.killLog.length > 0 && (
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          padding: '8px 12px',
+          flexShrink: 0,
+        }}>
+          <div className="mono" style={{ color: 'rgba(120,150,185,0.4)', fontSize: 9, letterSpacing: '0.1em', marginBottom: 5 }}>
+            ENGAGEMENT LOG
+          </div>
+          {[...state.killLog].reverse().slice(0, 6).map((entry, i) => (
+            <div key={i} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: 3, padding: '3px 0',
+              borderBottom: '1px solid rgba(255,255,255,0.03)',
+            }}>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                <span className="mono" style={{
+                  color: entry.outcome === 'DESTROYED' ? '#f05252' : '#3dd68c',
+                  fontSize: 9,
+                }}>
+                  {entry.outcome === 'DESTROYED' ? '✕' : '~'}
+                </span>
+                <span className="mono" style={{ color: 'rgba(180,210,245,0.7)', fontSize: 9 }}>{entry.id}</span>
+                <span className="mono" style={{ color: TYPE_COLOR[entry.type], fontSize: 8 }}>
+                  {entry.type.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="mono" style={{ color: 'rgba(120,150,185,0.45)', fontSize: 8 }}>
+                  {entry.range}m · {entry.mode.replace(/_/g, ' ')}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

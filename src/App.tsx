@@ -27,11 +27,15 @@ const TYPE_BADGE_VARIANT: Record<string, 'fpv' | 'ied' | 'rcws'> = {
 export default function App() {
   const {
     state, selectThreat, setTurretAzimuth, setTurretElevation,
-    setWeaponMode, approveEngagement, spawnThreat, runPipeline, tickThreats,
+    setWeaponMode, approveEngagement, spawnThreat, runPipeline, tickThreats, resetScenario,
   } = useSimStore()
 
-  const prevPipeline = useRef(false)
-  const lastTime     = useRef(Date.now())
+  const prevPipeline   = useRef(false)
+  const lastTime       = useRef(Date.now())
+
+  // Derived state — declared early so effects can reference them
+  const selectedThreat = state.threats.find(t => t.id === state.selectedThreatId)
+  const isEngageable   = selectedThreat?.status === 'APPROACHING'
 
   // Threat movement loop
   useEffect(() => {
@@ -74,13 +78,53 @@ export default function App() {
     prevPipeline.current = state.pipelineActive
   }, [state.pipelineActive, state.empFired, state.threats, state.selectedThreatId, selectThreat])
 
-  const selectedThreat = state.threats.find(t => t.id === state.selectedThreatId)
-  const isEngageable   = selectedThreat?.status === 'APPROACHING'
-  const currentStep    = state.pipelineStep?.replace(/_/g, ' ')
+  // Auto-deselect if selected threat escapes
+  useEffect(() => {
+    if (!state.selectedThreatId) return
+    const t = state.threats.find(x => x.id === state.selectedThreatId)
+    if (t?.status === 'ESCAPED') {
+      toast('TRACK ESCAPED', {
+        description: `${t.id} · ${t.type.replace(/_/g, ' ')} breached perimeter`,
+        duration: 3000,
+        style: { borderColor: 'rgba(245,158,11,0.4)', color: '#f5bc4b' },
+      })
+      setTimeout(() => selectThreat(null), 300)
+    }
+  }, [state.threats, state.selectedThreatId, selectThreat])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if ((e.target as HTMLElement).tagName === 'INPUT') return
+
+      if (e.key === 'r' || e.key === 'R') {
+        resetScenario()
+        return
+      }
+      if (e.key === ' ') {
+        e.preventDefault()
+        if (isEngageable && !state.engagementApproved && !state.pipelineActive) approveEngagement()
+        return
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (state.engagementApproved && !state.pipelineActive) runPipeline()
+        return
+      }
+      if (e.key === '1') spawnThreat('FPV_DRONE')
+      if (e.key === '2') spawnThreat('RF_IED')
+      if (e.key === '3') spawnThreat('ENEMY_RCWS')
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isEngageable, state.engagementApproved, state.pipelineActive, approveEngagement, runPipeline, spawnThreat, resetScenario])
+
+  const currentStep = state.pipelineStep?.replace(/_/g, ' ')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', background: '#080f1a', userSelect: 'none' }}>
-      <TopBar state={state} />
+      <TopBar state={state} onReset={resetScenario} />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel */}
@@ -160,7 +204,7 @@ export default function App() {
                   {/* Step 1 — Approve */}
                   {!state.engagementApproved && !state.pipelineActive && (
                     <Button variant="approve" size="full" onClick={approveEngagement}>
-                      ◎ APPROVE ENGAGEMENT
+                      ◎ APPROVE ENGAGEMENT <span style={{ opacity: 0.45, fontSize: 8 }}>[SPACE]</span>
                     </Button>
                   )}
 
@@ -173,7 +217,7 @@ export default function App() {
                         ✓ ENGAGEMENT APPROVED
                       </div>
                       <Button variant="execute" size="full" onClick={runPipeline} className="blink">
-                        ▶ EXECUTE ATTACK
+                        ▶ EXECUTE ATTACK <span style={{ opacity: 0.45, fontSize: 8 }}>[ENTER]</span>
                       </Button>
                     </>
                   )}

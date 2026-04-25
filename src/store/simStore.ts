@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import type { SimState, Threat, ThreatType, WeaponMode, PipelineStep } from '../types'
+import type { SimState, Threat, ThreatType, WeaponMode, PipelineStep, KillEntry } from '../types'
 
 const MAP_CENTER = { x: 500, y: 400 }
 const PIXELS_PER_METER = 0.45
@@ -22,13 +22,16 @@ const RF_FINGERPRINTS: Record<ThreatType, string[]> = {
   ENEMY_RCWS:  ['1.4GHz DSS', '2.4GHz DSSS', '5.8GHz OFDM', '900MHz LFH'],
 }
 
-function generateThreat(id: number, type: ThreatType): Threat {
+let threatIdCounter = 0
+
+function generateThreat(type: ThreatType): Threat {
+  threatIdCounter++
   const bearing = Math.random() * 360
   const range = 800 + Math.random() * 400
   const pos = polarToCanvas(bearing, range)
   const fps = RF_FINGERPRINTS[type]
   return {
-    id: `T${String(id).padStart(3, '0')}`,
+    id: `T${String(threatIdCounter).padStart(3, '0')}`,
     type,
     x: pos.x,
     y: pos.y,
@@ -46,25 +49,29 @@ const PIPELINE_STEPS: PipelineStep[] = [
   'CUMULATIVE_STRESS', 'RESONANCE_STRIKE', 'ASSESS',
 ]
 
-const INITIAL_STATE: SimState = {
-  threats: [
-    generateThreat(1, 'FPV_DRONE'),
-    generateThreat(2, 'RF_IED'),
-    generateThreat(3, 'ENEMY_RCWS'),
-  ],
-  turret: { azimuth: 0, elevation: 15, mode: 'DIRECTED_EMP' },
-  selectedThreatId: null,
-  engagementApproved: false,
-  pipelineActive: false,
-  pipelineStep: null,
-  pipelineProgress: 0,
-  empFired: false,
-  empFireCount: 0,
-  systemTime: 0,
+function makeInitialState(): SimState {
+  threatIdCounter = 0
+  return {
+    threats: [
+      generateThreat('FPV_DRONE'),
+      generateThreat('RF_IED'),
+      generateThreat('ENEMY_RCWS'),
+    ],
+    turret: { azimuth: 0, elevation: 15, mode: 'DIRECTED_EMP' },
+    selectedThreatId: null,
+    engagementApproved: false,
+    pipelineActive: false,
+    pipelineStep: null,
+    pipelineProgress: 0,
+    empFired: false,
+    empFireCount: 0,
+    systemTime: 0,
+    killLog: [],
+  }
 }
 
 export function useSimStore() {
-  const [state, setState] = useState<SimState>(INITIAL_STATE)
+  const [state, setState] = useState<SimState>(makeInitialState)
   const pipelineTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const selectThreat = useCallback((id: string | null) => {
@@ -91,10 +98,7 @@ export function useSimStore() {
   }, [])
 
   const spawnThreat = useCallback((type: ThreatType) => {
-    setState(s => {
-      const id = s.threats.length + 1
-      return { ...s, threats: [...s.threats, generateThreat(id, type)] }
-    })
+    setState(s => ({ ...s, threats: [...s.threats, generateThreat(type)] }))
   }, [])
 
   const runPipeline = useCallback(() => {
@@ -108,13 +112,25 @@ export function useSimStore() {
     const advance = () => {
       stepIndex++
       if (stepIndex >= PIPELINE_STEPS.length) {
-        // Pipeline complete — destroy target
+        // Pipeline complete
         setState(s => {
+          const target = s.threats.find(t => t.id === s.selectedThreatId)
+          const outcome: KillEntry['outcome'] = s.turret.mode === 'KINETIC' ? 'DESTROYED' : 'DISRUPTED'
           const threats = s.threats.map(t =>
             t.id === s.selectedThreatId
-              ? { ...t, status: (s.turret.mode === 'KINETIC' ? 'DESTROYED' : 'DISRUPTED') as Threat['status'] }
+              ? { ...t, status: outcome as Threat['status'] }
               : t
           )
+          const entry: KillEntry | null = target
+            ? {
+                id: target.id,
+                type: target.type,
+                mode: s.turret.mode,
+                outcome,
+                range: Math.round(target.range),
+                time: s.systemTime,
+              }
+            : null
           return {
             ...s,
             threats,
@@ -124,6 +140,7 @@ export function useSimStore() {
             empFired: true,
             empFireCount: s.empFireCount + 1,
             engagementApproved: false,
+            killLog: entry ? [...s.killLog, entry] : s.killLog,
           }
         })
         return
@@ -144,11 +161,24 @@ export function useSimStore() {
       const threats = s.threats.map(t => {
         if (t.status !== 'APPROACHING') return t
         const newRange = Math.max(0, t.range - t.speed * dt)
+        if (newRange <= 5) {
+          // Threat reached the position — mark escaped
+          const pos = polarToCanvas(t.bearing, 0)
+          return { ...t, range: 0, x: pos.x, y: pos.y, status: 'ESCAPED' as Threat['status'] }
+        }
         const pos = polarToCanvas(t.bearing, newRange)
         return { ...t, range: newRange, x: pos.x, y: pos.y }
       })
       return { ...s, threats, systemTime: s.systemTime + dt * 1000 }
     })
+  }, [])
+
+  const resetScenario = useCallback(() => {
+    if (pipelineTimer.current) {
+      clearTimeout(pipelineTimer.current)
+      pipelineTimer.current = null
+    }
+    setState(makeInitialState())
   }, [])
 
   return {
@@ -161,6 +191,7 @@ export function useSimStore() {
     spawnThreat,
     runPipeline,
     tickThreats,
+    resetScenario,
     MAP_CENTER,
   }
 }

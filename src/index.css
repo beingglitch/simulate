@@ -75,8 +75,12 @@ html, body, #root {
 
 /* Shapes per type */
 .threat-icon.fpv-drone  { background: rgba(220,50,50,0.15);  color: #f06060; transform: rotate(45deg); }
+.threat-icon.fpv-drone.selected { transform: rotate(45deg) scale(1.3); }
 .threat-icon.rf-ied     { background: rgba(230,140,0,0.15);  color: #f5a020; border-radius: 50%; }
 .threat-icon.enemy-rcws { background: rgba(200,40,120,0.15); color: #e050a0; clip-path: polygon(50% 0%,100% 100%,0% 100%); }
+
+/* Counter-rotate letter inside FPV drone diamond */
+.counter-rotate { display: inline-block; transform: rotate(-45deg); }
 
 /* Disrupted / destroyed */
 .threat-icon.disrupted  { opacity: 0.55; color: #3dd68c !important; background: rgba(61,214,140,0.12) !important; }
