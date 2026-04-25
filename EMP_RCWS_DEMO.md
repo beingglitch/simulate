@@ -1,11 +1,11 @@
-# STORMBREAKER — EMP-RCWS Simulator
+# EMP-RCWS Simulator
 ### Tech Fest Demo Guide
 
 ---
 
 ## What This Is
 
-A fully browser-based simulation and operator control interface for the **STORMBREAKER EMP-RCWS (Remote-Controlled Weapon System)**. Visitors can sit at the console, select an incoming threat, execute a six-step electronic attack pipeline, and watch the engagement play out on a live tactical map — no hardware required.
+A fully browser-based simulation and operator control interface for the **EMP-RCWS (Remote-Controlled Weapon System)**. Visitors can sit at the console, select an incoming threat, execute a six-step electronic attack pipeline, and watch the engagement play out on a live tactical map — no hardware required.
 
 ---
 

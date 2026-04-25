@@ -43,7 +43,7 @@ export default function TopBar({ state, onReset }: Props) {
         </div>
         <div className="topbar-sep" />
         <span className="mono" style={{ color: 'rgba(160,185,215,0.45)', fontSize: 10, letterSpacing: '0.08em' }}>
-          STORMBREAKER · COUNTER-UAS / EW SIMULATOR
+          EMP-RCWS · COUNTER-UAS / EW SIMULATOR
         </span>
       </div>
 
