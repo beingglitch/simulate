@@ -6,6 +6,8 @@ import RFSpectrum from './RFSpectrum'
 import BITPanel from './BITPanel'
 import EFieldPanel from './EFieldPanel'
 import ZoneLegend from '../ZoneLegend'
+import { lazy, Suspense } from 'react'
+const TurretView3D = lazy(() => import('./TurretView3D'))
 
 interface Props {
   state: SimState
@@ -81,6 +83,22 @@ export default function OperatorConsole({ state, setTurretAzimuth, setTurretElev
           OPERATOR CONSOLE
         </span>
       </div>
+
+      {/* 1.5. 3D Turret View */}
+      <Suspense fallback={
+        <div style={{ width: '100%', height: 215, background: '#060c18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="mono" style={{ color: 'rgba(77,166,255,0.3)', fontSize: 9 }}>LOADING 3D…</span>
+        </div>
+      }>
+        <TurretView3D
+          azimuth={state.turret.azimuth}
+          elevation={state.turret.elevation}
+          mode={state.turret.mode}
+          empFireCount={state.empFireCount}
+          pipelineActive={state.pipelineActive}
+          selectedBearing={selectedThreat?.bearing}
+        />
+      </Suspense>
 
       {/* 2. Azimuth Dial */}
       <div style={{ padding: '12px 8px 4px', flexShrink: 0 }}>
