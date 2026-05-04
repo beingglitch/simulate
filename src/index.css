@@ -82,5 +82,38 @@ input[type=range] {
   display: none !important;
 }
 
+/* ── Number glitch — brief digit flicker on value change ──────────── */
+@keyframes num-glitch {
+  0%   { opacity: 1; }
+  20%  { opacity: 0.3; letter-spacing: 0.2em; }
+  40%  { opacity: 1; letter-spacing: inherit; }
+  60%  { opacity: 0.6; }
+  80%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+.num-glitch { animation: num-glitch 0.15s ease-out; }
+
+/* ── Contact card entry — slide in from left ─────────────────────── */
+@keyframes card-enter {
+  from { transform: translateX(-16px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.card-enter { animation: card-enter 0.3s ease-out forwards; }
+
+/* ── Engagement vignette flash ────────────────────────────────────── */
+@keyframes engage-vignette {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.engage-vignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 500;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(245,166,35,0.15) 100%);
+  animation: engage-vignette 0.5s ease-out forwards;
+}
+
+/* ── Crosshair cursor on map/radar views ──────────────────────────── */
+.view-crosshair { cursor: crosshair; }
+
 /* ── Util ─────────────────────────────────────────────────────────── */
 .data-flicker { animation: data-flicker 4s ease-in-out infinite; }

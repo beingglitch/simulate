@@ -15,7 +15,7 @@ export default function CesiumMap() {
 
   const {
     tracks, selectedTrackId, zonesVisible,
-    isEngaging, engagementTargetId, tickTracks,
+    isEngaging, engagementTargetId,
   } = useRCWSStore()
 
   // ── Init viewer ────────────────────────────────────────────────
@@ -30,20 +30,6 @@ export default function CesiumMap() {
       viewerRef.current = null
     }
   }, [])
-
-  // ── Sim tick ───────────────────────────────────────────────────
-  useEffect(() => {
-    let last = performance.now()
-    let raf: number
-    function tick() {
-      const now = performance.now()
-      tickTracks((now - last) / 1000)
-      last = now
-      raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [tickTracks])
 
   // ── Zone visibility ────────────────────────────────────────────
   useEffect(() => {

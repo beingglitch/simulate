@@ -78,18 +78,12 @@ function drawRadar(
     const frac = i / trailCount
     const angle = sweepAngle - (1 - frac) * 1.2 - Math.PI / 2
     const opacity = frac * 0.35
-    const grad = ctx.createConicalGradient
-      ? undefined
-      : null
-
-    // Simple approach: draw thin wedge slices
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, R, angle - 0.03, angle)
     ctx.closePath()
     ctx.fillStyle = `rgba(245,166,35,${opacity})`
     ctx.fill()
-    void grad
   }
 
   // Sweep line

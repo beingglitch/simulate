@@ -100,8 +100,8 @@ export function addRCWSEntity(viewer: Cesium.Viewer): Cesium.Entity {
 
 // ─── Threat colours ──────────────────────────────────────────────
 export const THREAT_COLORS: Record<string, string> = {
-  FPV_DRONE:  '#FF2020',
-  RF_IED:     '#F5A623',
-  SWARM:      '#FF2020',
-  ENEMY_RCWS: '#CC00FF',
+  FPV_DRONE:  '#00D4FF',
+  RF_IED:     '#FF2020',
+  ENEMY_RCWS: '#F5A623',
+  UNKNOWN:    '#888888',
 }

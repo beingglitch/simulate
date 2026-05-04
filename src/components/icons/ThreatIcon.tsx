@@ -51,38 +51,17 @@ function RFIEDIcon({ size = 20, color = 'currentColor' }: IconProps) {
   )
 }
 
-// Swarm — 4 small drone shapes clustered
-function SwarmIcon({ size = 20, color = 'currentColor' }: IconProps) {
+// Unknown — question mark with signal rings
+function UnknownIcon({ size = 20, color = 'currentColor' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Top-left mini drone */}
-      <rect x="2" y="2" width="2.5" height="2.5" fill={color} rx="0.3" />
-      <line x1="3.25" y1="3.25" x2="1" y2="1" stroke={color} strokeWidth="0.7" />
-      <line x1="3.25" y1="3.25" x2="5.5" y2="1" stroke={color} strokeWidth="0.7" />
-      <line x1="3.25" y1="3.25" x2="1" y2="5.5" stroke={color} strokeWidth="0.7" />
-      <line x1="3.25" y1="3.25" x2="5.5" y2="5.5" stroke={color} strokeWidth="0.7" />
-      {/* Top-right mini drone */}
-      <rect x="15.5" y="2" width="2.5" height="2.5" fill={color} rx="0.3" />
-      <line x1="16.75" y1="3.25" x2="14.5" y2="1" stroke={color} strokeWidth="0.7" />
-      <line x1="16.75" y1="3.25" x2="19" y2="1" stroke={color} strokeWidth="0.7" />
-      <line x1="16.75" y1="3.25" x2="14.5" y2="5.5" stroke={color} strokeWidth="0.7" />
-      <line x1="16.75" y1="3.25" x2="19" y2="5.5" stroke={color} strokeWidth="0.7" />
-      {/* Centre drone (larger) */}
-      <rect x="8.5" y="8.5" width="3" height="3" fill={color} rx="0.4" />
-      <line x1="10" y1="10" x2="7.5" y2="7.5" stroke={color} strokeWidth="0.8" />
-      <line x1="10" y1="10" x2="12.5" y2="7.5" stroke={color} strokeWidth="0.8" />
-      <line x1="10" y1="10" x2="7.5" y2="12.5" stroke={color} strokeWidth="0.8" />
-      <line x1="10" y1="10" x2="12.5" y2="12.5" stroke={color} strokeWidth="0.8" />
-      {/* Bottom mini drone */}
-      <rect x="8.75" y="15.5" width="2.5" height="2.5" fill={color} rx="0.3" />
-      <line x1="10" y1="16.75" x2="8" y2="14.5" stroke={color} strokeWidth="0.7" />
-      <line x1="10" y1="16.75" x2="12" y2="14.5" stroke={color} strokeWidth="0.7" />
-      <line x1="10" y1="16.75" x2="8" y2="19" stroke={color} strokeWidth="0.7" />
-      <line x1="10" y1="16.75" x2="12" y2="19" stroke={color} strokeWidth="0.7" />
-      {/* Connection mesh lines */}
-      <line x1="3.25" y1="3.25" x2="10" y2="10" stroke={color} strokeWidth="0.4" opacity="0.3" strokeDasharray="1 2" />
-      <line x1="16.75" y1="3.25" x2="10" y2="10" stroke={color} strokeWidth="0.4" opacity="0.3" strokeDasharray="1 2" />
-      <line x1="10" y1="16.75" x2="10" y2="10" stroke={color} strokeWidth="0.4" opacity="0.3" strokeDasharray="1 2" />
+      {/* Outer ring */}
+      <circle cx="10" cy="10" r="8.5" stroke={color} strokeWidth="1" opacity="0.4" strokeDasharray="2 2" />
+      {/* Inner circle */}
+      <circle cx="10" cy="10" r="5" stroke={color} strokeWidth="1.2" fill="none" />
+      {/* Question mark */}
+      <path d="M8 7.5 Q8 6 10 6 Q12 6 12 7.8 Q12 9 10 9.8 L10 11" stroke={color} strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <circle cx="10" cy="13" r="0.7" fill={color} />
     </svg>
   )
 }
@@ -117,7 +96,8 @@ export default function ThreatIcon({
   switch (type) {
     case 'FPV_DRONE':  return <FPVIcon size={size} color={color} />
     case 'RF_IED':     return <RFIEDIcon size={size} color={color} />
-    case 'SWARM':      return <SwarmIcon size={size} color={color} />
     case 'ENEMY_RCWS': return <EnemyRCWSIcon size={size} color={color} />
+    case 'UNKNOWN':    return <UnknownIcon size={size} color={color} />
+    default:           return <UnknownIcon size={size} color={color} />
   }
 }

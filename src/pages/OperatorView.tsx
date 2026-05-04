@@ -1,18 +1,12 @@
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
-import { useRCWSStore }     from '../store/useRCWSStore'
-import TrackList            from '../components/operator/TrackList'
-import AzimuthDial          from '../components/operator/AzimuthDial'
-import ElevationGauge       from '../components/operator/ElevationGauge'
-import WeaponModeSelector   from '../components/operator/WeaponModeSelector'
-import RFFingerprint        from '../components/operator/RFFingerprint'
-import EngagementParams     from '../components/operator/EngagementParams'
-import BITPanel             from '../components/operator/BITPanel'
-import EngagementLog        from '../components/operator/EngagementLog'
+import { useRCWSStore }           from '../store/useRCWSStore'
+import ThreatDetectionPanel       from '../components/operator/ThreatDetectionPanel'
+import ThreatIntelPanel           from '../components/operator/ThreatIntelPanel'
+import EngagementLog              from '../components/operator/EngagementLog'
 import PipelinePanel, { getPipelineTotalMs, getPipelineSteps } from '../components/operator/PipelinePanel'
-import EFieldPanel          from '../components/operator/EFieldPanel'
-import AlertOverlay         from '../components/operator/AlertOverlay'
-import RadarScope           from '../components/operator/RadarScope'
-import { playKillConfirmed } from '../utils/audio'
+import AlertOverlay               from '../components/operator/AlertOverlay'
+import RadarScope                 from '../components/operator/RadarScope'
+import { playKillConfirmed }      from '../utils/audio'
 import { buildTrack, nextTrackId } from '../utils/trackUtils'
 import type { ThreatType, ActiveView } from '../types'
 
@@ -165,9 +159,6 @@ export default function OperatorView() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const engParams = selectedTrack ? {
-    peakPowerMW: 450, targetDistanceM: selectedTrack.distance,
-  } : { peakPowerMW: 450, targetDistanceM: 0 }
 
   return (
     <div style={{
@@ -214,23 +205,15 @@ export default function OperatorView() {
       {/* Main three-column area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* ── LEFT PANEL ── */}
+        {/* ── LEFT PANEL: Active threat list + action buttons ── */}
         <div style={{
-          width: 268, flexShrink: 0, borderRight: '1px solid #1A1A1A',
-          display: 'flex', flexDirection: 'column', background: '#000',
+          width: 284, flexShrink: 0, borderRight: '1px solid #1A1A1A',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#000',
         }}>
-          <PanelHeader>TRACK MANAGEMENT</PanelHeader>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-            <TrackList />
+          <PanelHeader>THREAT DETECTION</PanelHeader>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <ThreatDetectionPanel />
           </div>
-          <div style={{ borderTop: '1px solid #111', flexShrink: 0 }} />
-          <RFFingerprint />
-          <div style={{ borderTop: '1px solid #111', flexShrink: 0 }} />
-          <EFieldPanel
-            isEngaging={isEngaging}
-            targetDistanceM={engParams.targetDistanceM}
-            peakPowerMW={engParams.peakPowerMW}
-          />
         </div>
 
         {/* ── CENTRE: tabbed view ── */}
@@ -300,36 +283,50 @@ export default function OperatorView() {
           </div>
         </div>
 
-        {/* ── RIGHT PANEL ── */}
+        {/* ── RIGHT PANEL: Threat intel (top) + weapon controls (bottom) ── */}
         <div style={{
-          width: 248, flexShrink: 0, borderLeft: '1px solid #1A1A1A',
-          display: 'flex', flexDirection: 'column', overflowY: 'auto', background: '#000',
+          width: 262, flexShrink: 0, borderLeft: '1px solid #1A1A1A',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#000',
         }}>
-          <PanelHeader>WEAPON SYSTEM</PanelHeader>
-          <WeaponModeSelector />
-          <div style={{ borderTop: '1px solid #111' }} />
-          <AzimuthDial azimuth={azimuth} />
-          <div style={{ borderTop: '1px solid #111' }} />
-          <ElevationGauge elevation={elevation} />
-          <div style={{ borderTop: '1px solid #111' }} />
-          <EngagementParams />
-          <div style={{ borderTop: '1px solid #111' }} />
-          <BITPanel />
+          {/* Dynamic header */}
+          <div style={{
+            padding: '5px 12px', fontSize: 11, color: '#444',
+            letterSpacing: '0.16em', borderBottom: '1px solid #111',
+            background: '#010101', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {selectedTrack ? (
+              <>
+                <span style={{ color: '#F5A623' }}>●</span>
+                <span>THREAT INTEL — {selectedTrack.id}</span>
+              </>
+            ) : (
+              <span>THREAT OVERVIEW</span>
+            )}
+          </div>
 
-          {/* 3D turret mini-preview */}
-          <div style={{ borderTop: '1px solid #111', flexShrink: 0 }}>
-            <div style={{ padding: '4px 10px 0', fontSize: 11, color: '#333', letterSpacing: '0.1em' }}>
-              3D TURRET
-            </div>
-            <Suspense fallback={<ViewLoader label="3D…" small />}>
-              <TurretView3D
-                azimuth={azimuth}
-                elevation={elevation}
-                mode={mode}
-                isEngaging={isEngaging}
-                threatBearings={threatBearings}
-              />
-            </Suspense>
+          {/* Scrollable intel area */}
+          <ThreatIntelPanel />
+
+          {/* Compact AZ / EL / MODE readout strip */}
+          <div style={{ borderTop: '1px solid #111', flexShrink: 0, display: 'flex' }}>
+            {[
+              { label: 'AZIMUTH',   value: `${String(Math.round(azimuth)).padStart(3,'0')}°`, color: '#F5A623' },
+              { label: 'ELEVATION', value: `${elevation >= 0 ? '+' : ''}${elevation}°`,        color: '#F5A623' },
+              { label: 'MODE',      value: mode.replace('_',' '),
+                color: mode === 'RF_JAM' ? '#00D4FF' : mode === 'DIRECTED_EMP' ? '#F5A623' : '#FF2020' },
+            ].map(({ label, value, color }, i) => (
+              <div key={label} style={{
+                flex: 1, padding: '7px 0', textAlign: 'center',
+                borderRight: i < 2 ? '1px solid #0A0A0A' : 'none',
+              }}>
+                <div style={{ fontSize: 9, color: '#383838', letterSpacing: '0.14em', marginBottom: 3 }}>
+                  {label}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color, letterSpacing: '0.06em' }}>
+                  {value}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

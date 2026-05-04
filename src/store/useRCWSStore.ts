@@ -276,9 +276,9 @@ export const useRCWSStore = create<RCWSStore>((set, get) => {
           newLat, newLng, t.objective.lat, t.objective.lng, t.speed,
         )
 
-        let contactStatus = t.contactStatus
+        let contactStatus: import('../types').ContactStatus = t.contactStatus
         let inRangeWindowStart = t.inRangeWindowStart
-        let newStatus = t.status
+        let newStatus: import('../types').TrackStatus = t.status
 
         // Entered range ring
         if (inRange && !wasInRange) {
@@ -306,7 +306,7 @@ export const useRCWSStore = create<RCWSStore>((set, get) => {
         }
 
         // Exited range without engagement → ESCAPED
-        if (wasInRange && !inRange && t.status !== 'NEUTRALISED') {
+        if (wasInRange && !inRange) {
           contactStatus = 'ESCAPED'
           newStatus = 'ESCAPED'
           alertsToAdd.push({
@@ -320,7 +320,7 @@ export const useRCWSStore = create<RCWSStore>((set, get) => {
 
         // Reached objective
         if (distToObj < 80 && t.flightPath !== 'PATROL') {
-          contactStatus = 'OBJECTIVE_REACHED'
+          contactStatus = 'OBJECTIVE_REACHED' as import('../types').ContactStatus
           alertsToAdd.push({
             type: 'THREAT_REALIZED', trackId: t.id,
             message: `${t.id} OBJECTIVE REACHED`,
